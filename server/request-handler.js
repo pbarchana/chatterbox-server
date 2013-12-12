@@ -6,6 +6,7 @@
  * *Hint* Check out the node module documentation at http://nodejs.org/api/modules.html. */
 var messageLog = [];
 var url = require('url');
+var mysql = require('mysql');
 var headers = {
   /* These headers will allow Cross-Origin Resource Sharing (CORS).
  * This CRUCIAL code allows this server to talk to websites that
@@ -42,14 +43,35 @@ var requestMethods = {
     var responseMessage = JSON.stringify(messageLog);
     console.log("messageLog = ", messageLog, "after json = ", responseMessage);
     response.end(responseMessage);
+
   },
   POST:  function(request, response, headers) {
     var body = '';
     response.writeHead(201, headers); //created
-    request.on('data', function( data) {
+    request.on('data', function(data) {
       body += data;
-      console.log(body);
-      messageLog.push(JSON.parse(body));
+    });
+
+    request.on('end', function() {
+      dbConnection = mysql.createConnection({
+        user: "root",
+        password: "",
+        database: "chat"
+      });
+
+      dbConnection.connect();
+
+      var dataString = body.split("&");
+      var username = dataString[0].split("=")[1];
+      var message = dataString[1].split("=")[1];
+
+      dbConnection.query('INSERT INTO messages SET ?', {username: username, msg: message, createdAt: new Date() }, function(err, result) {
+        if (err) {
+          throw err;
+        }
+      });
+
+      console.log("from the request on end " + username + ": " + message);
     });
     response.end();
   },
