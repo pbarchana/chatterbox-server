@@ -17,7 +17,7 @@ var headers = {
   "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
   "access-control-allow-headers": "content-type, accept",
   "access-control-max-age": 10, // Seconds.
-  'Content-Type': "application/"
+  'Content-Type': "plain/text"
 
 };
 
@@ -56,10 +56,13 @@ var requestMethods = {
         throw err;
       }
 
-      result.forEach(function(msgItem) {
-        msgItem.text = msgItem.msg;
-        messageLog.push(msgItem);
-      });
+      result[result.length-1].text = result[result.length-1].msg;
+      messageLog.push(result[result.length-1]);
+
+      // result.forEach(function(msgItem) {
+      //   msgItem.text = msgItem.msg;
+      //   messageLog.push(msgItem);
+      // });
       response.end(JSON.stringify(messageLog));
     });
 
@@ -88,8 +91,6 @@ var requestMethods = {
           throw err;
         }
       });
-
-      dbConnection.query('')
 
       // console.log("from the request on end " + username + ": " + message);
     });
