@@ -17,7 +17,7 @@ var headers = {
   "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
   "access-control-allow-headers": "content-type, accept",
   "access-control-max-age": 10, // Seconds.
-  'Content-Type': "text/plain"
+  'Content-Type': "application/"
 
 };
 
@@ -40,9 +40,29 @@ var handleRequest = function(request, response) {
 var requestMethods = {
   GET: function(request, response, headers) {
     response.writeHead(200, headers); //okay
-    var responseMessage = JSON.stringify(messageLog);
-    console.log("messageLog = ", messageLog, "after json = ", responseMessage);
-    response.end(responseMessage);
+    // var responseMessage = JSON.stringify(messageLog);
+    // response.end(responseMessage);
+
+    dbConnection = mysql.createConnection({
+      user: "root",
+      password: "",
+      database: "chat"
+    });
+
+    dbConnection.connect();
+
+    dbConnection.query('SELECT * FROM messages', function(err, result) {
+      if (err) {
+        throw err;
+      }
+
+      result.forEach(function(msgItem) {
+        msgItem.text = msgItem.msg;
+        messageLog.push(msgItem);
+      });
+      response.end(JSON.stringify(messageLog));
+    });
+
 
   },
   POST:  function(request, response, headers) {
@@ -61,17 +81,17 @@ var requestMethods = {
 
       dbConnection.connect();
 
-      var dataString = body.split("&");
-      var username = dataString[0].split("=")[1];
-      var message = dataString[1].split("=")[1];
+      var dataString = JSON.parse(body);
 
-      dbConnection.query('INSERT INTO messages SET ?', {username: username, msg: message, createdAt: new Date() }, function(err, result) {
+      dbConnection.query('INSERT INTO messages SET ?', {username: dataString.username, msg: dataString.text, createdAt: new Date() }, function(err, result) {
         if (err) {
           throw err;
         }
       });
 
-      console.log("from the request on end " + username + ": " + message);
+      dbConnection.query('')
+
+      // console.log("from the request on end " + username + ": " + message);
     });
     response.end();
   },
