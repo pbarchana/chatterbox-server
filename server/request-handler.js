@@ -7,6 +7,7 @@
 var messageLog = [];
 var url = require('url');
 var mysql = require('mysql');
+var serverDB = require('../../ORM_Refactor/persistent_server');
 var headers = {
   /* These headers will allow Cross-Origin Resource Sharing (CORS).
  * This CRUCIAL code allows this server to talk to websites that
@@ -43,30 +44,25 @@ var requestMethods = {
     // var responseMessage = JSON.stringify(messageLog);
     // response.end(responseMessage);
 
-    dbConnection = mysql.createConnection({
-      user: "root",
-      password: "",
-      database: "chat"
-    });
+    // dbConnection = mysql.createConnection({
+    //   user: "root",
+    //   password: "",
+    //   database: "chat"
+    // });
 
-    dbConnection.connect();
+    // dbConnection.connect();
 
-    dbConnection.query('SELECT * FROM messages', function(err, result) {
-      if (err) {
-        throw err;
-      }
+    // dbConnection.query('SELECT * FROM messages', function(err, result) {
+    //   if (err) {
+    //     throw err;
+    //   }
 
-      result[result.length-1].text = result[result.length-1].msg;
-      messageLog.push(result[result.length-1]);
+      // result[result.length-1].text = result[result.length-1].msg;
+      // messageLog.push(result[result.length-1]);
 
-      // result.forEach(function(msgItem) {
-      //   msgItem.text = msgItem.msg;
-      //   messageLog.push(msgItem);
-      // });
-      response.end(JSON.stringify(messageLog));
-    });
-
-
+      serverDB.getMsgFromDb(function(messageLog) {
+        response.end(JSON.stringify(messageLog));
+      });
   },
   POST:  function(request, response, headers) {
     var body = '';
@@ -76,23 +72,25 @@ var requestMethods = {
     });
 
     request.on('end', function() {
-      dbConnection = mysql.createConnection({
-        user: "root",
-        password: "",
-        database: "chat"
-      });
 
-      dbConnection.connect();
+      serverDB.postMsgToDb(JSON.parse(body));
 
-      var dataString = JSON.parse(body);
+      // dbConnection = mysql.createConnection({
+      //   user: "root",
+      //   password: "",
+      //   database: "chat"
+      // });
 
-      dbConnection.query('INSERT INTO messages SET ?', {username: dataString.username, msg: dataString.text, createdAt: new Date() }, function(err, result) {
-        if (err) {
-          throw err;
-        }
-      });
+      // dbConnection.connect();
 
-      // console.log("from the request on end " + username + ": " + message);
+      // var dataString = JSON.parse(body);
+
+      // dbConnection.query('INSERT INTO messages SET ?', {username: dataString.username, msg: dataString.text, createdAt: new Date() }, function(err, result) {
+      //   if (err) {
+      //     throw err;
+      //   }
+      // });
+
     });
     response.end();
   },
